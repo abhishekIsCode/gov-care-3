@@ -1,0 +1,116 @@
+{
+  "entities": {
+    "User": {
+      "title": "User Profile",
+      "description": "Base profile for both doctors and patients",
+      "type": "object",
+      "properties": {
+        "uid": { "type": "string" },
+        "email": { "type": "string" },
+        "displayName": { "type": "string" },
+        "role": { "type": "string", "enum": ["doctor", "patient"] },
+        "assignedDoctorId": { "type": "string" },
+        "currentSeverity": { "type": "string", "enum": ["Emergency", "Critical", "Normal"] },
+        "photoURL": { "type": "string" },
+        "phone": { "type": "string" },
+        "emergencyContact": { "type": "string" },
+        "createdAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["uid", "email", "role"]
+    },
+    "PatientRecord": {
+      "title": "Medical Record",
+      "description": "History and clinical notes for a patient",
+      "type": "object",
+      "properties": {
+        "patientId": { "type": "string" },
+        "doctorId": { "type": "string" },
+        "diagnosis": { "type": "string" },
+        "notes": { "type": "string" },
+        "date": { "type": "string", "format": "date-time" }
+      },
+      "required": ["patientId", "doctorId", "diagnosis", "date"]
+    },
+    "Appointment": {
+      "title": "Appointment",
+      "description": "Scheduled consultation between doctor and patient",
+      "type": "object",
+      "properties": {
+        "patientId": { "type": "string" },
+        "doctorId": { "type": "string" },
+        "date": { "type": "string", "format": "date-time" },
+        "status": { "type": "string", "enum": ["pending", "confirmed", "cancelled", "completed"] },
+        "severity": { "type": "string", "enum": ["Emergency", "Critical", "Normal"] },
+        "reason": { "type": "string" }
+      },
+      "required": ["patientId", "doctorId", "date", "status", "severity"]
+    },
+    "LabResult": {
+      "title": "Lab Result",
+      "description": "Recorded laboratory test results",
+      "type": "object",
+      "properties": {
+        "patientId": { "type": "string" },
+        "testName": { "type": "string" },
+        "resultValue": { "type": "string" },
+        "unit": { "type": "string" },
+        "status": { "type": "string", "enum": ["Normal", "Abnormal"] },
+        "date": { "type": "string", "format": "date-time" }
+      },
+      "required": ["patientId", "testName", "resultValue", "status", "date"]
+    },
+    "Prescription": {
+      "title": "Prescription",
+      "description": "Medication prescribed to a patient",
+      "type": "object",
+      "properties": {
+        "patientId": { "type": "string" },
+        "doctorId": { "type": "string" },
+        "medication": { "type": "string" },
+        "dosage": { "type": "string" },
+        "duration": { "type": "string" },
+        "date": { "type": "string", "format": "date-time" }
+      },
+      "required": ["patientId", "doctorId", "medication", "dosage", "duration", "date"]
+    },
+    "Message": {
+      "title": "Chat Message",
+      "description": "Secure communication between doctor and patient",
+      "type": "object",
+      "properties": {
+        "senderId": { "type": "string" },
+        "receiverId": { "type": "string" },
+        "content": { "type": "string" },
+        "timestamp": { "type": "string", "format": "date-time" },
+        "read": { "type": "boolean" }
+      },
+      "required": ["senderId", "receiverId", "content", "timestamp"]
+    }
+  },
+  "firestore": {
+    "users": {
+      "schema": "User",
+      "description": "Collection of all user profiles (doctors and patients)"
+    },
+    "medicalRecords": {
+      "schema": "PatientRecord",
+      "description": "Clinical history entries"
+    },
+    "appointments": {
+      "schema": "Appointment",
+      "description": "Scheduled appointments"
+    },
+    "labResults": {
+      "schema": "LabResult",
+      "description": "Diagnostic lab results"
+    },
+    "prescriptions": {
+      "schema": "Prescription",
+      "description": "Medication records"
+    },
+    "chats/{chatId}/messages": {
+      "schema": "Message",
+      "description": "Threaded messages between users"
+    }
+  }
+}

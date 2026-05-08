@@ -1,0 +1,267 @@
+import React, { createContext, useContext, useState, ReactNode } from 'react';
+
+type Language = 'en' | 'hi' | 'bn' | 'te' | 'mr' | 'ta' | 'gu' | 'kn' | 'ml' | 'pa';
+
+interface LanguageContextType {
+  language: Language;
+  setLanguage: (lang: Language) => void;
+  t: (key: string) => string;
+}
+
+const languages = [
+  { id: 'en', label: 'English' },
+  { id: 'hi', label: 'हिन्दी' },
+  { id: 'bn', label: 'বাংলা' },
+  { id: 'te', label: 'తెలుగు' },
+  { id: 'mr', label: 'मराठी' },
+  { id: 'ta', label: 'தமிழ்' },
+  { id: 'gu', label: 'ગુજરાતી' },
+  { id: 'kn', label: 'ಕನ್ನಡ' },
+  { id: 'ml', label: 'മലയാളം' },
+  { id: 'pa', label: 'ਪੰਜਾਬੀ' },
+];
+
+const translations = {
+  en: {
+    dashboard: 'Dashboard',
+    overview: 'Overview',
+    patients: 'Patients',
+    messages: 'Secure Messages',
+    profile: 'Profile',
+    logout: 'Logout',
+    goodMorning: 'Good morning',
+    goodAfternoon: 'Good afternoon',
+    goodEvening: 'Good evening',
+    welcomeBack: 'Welcome back',
+    scheduledForToday: 'scheduled for today',
+    casesRequireAttention: 'cases require immediate clinical attention',
+    allSystemsNormal: 'All systems are operating within normal parameters',
+    simulateEmergency: 'Simulate Emergency',
+    todayAppointments: 'Today appointments',
+    criticalCases: 'Critical Cases',
+    actionRequired: 'Action required',
+    inPipeline: 'In pipeline',
+    scheduled: 'Scheduled',
+    priorityQueue: 'Priority Patient Queue',
+    automatedSorting: 'Automated severity sorting active',
+    newAdmission: 'New Admission',
+    noPendingCases: 'No pending high-priority cases',
+    waitingForSignals: 'Waiting for diagnostic signals',
+    analyze: 'Analyze',
+    totalActivePatients: 'Total Active Patients',
+    avgConsultations: 'Avg. Consultations / Mo',
+    diagnosticAccuracy: 'Diagnostic Accuracy',
+    patientSatisfaction: 'Patient Satisfaction',
+    patientDirectory: 'Patient Directory',
+    syncRegistry: 'Synchronize Clinical Registry',
+    activeCases: 'Active Medical Cases',
+    searchPatientsList: 'Search by name or clinical status...',
+    noPatientsFound: 'No patients matching your search criteria.',
+    addPatient: 'Add Patient',
+    registryOf: 'Registry of',
+    assignedSubjects: 'assigned subjects by Clinical Admin',
+    syncAdminAssignments: 'Synchronize Admin Assignments',
+    dr: 'Dr.',
+    searchPatients: 'Search patient database...',
+    activePatients: 'Active Patients',
+    criticalAlerts: 'Critical Alerts',
+    pendingReviews: 'Pending Reviews',
+    clinicalExcellence: 'Clinical Excellence',
+    recentActivity: 'Recent Clinical Activity',
+    emergency: 'Emergency',
+    critical: 'Critical',
+    normal: 'Normal',
+    confirmed: 'Confirmed',
+    pending: 'Pending',
+    activePractice: 'Active Practice',
+    experience: 'Experience',
+    totalProcedures: 'Total Procedures',
+    education: 'Education',
+    certifications: 'Certifications',
+    professionalBiography: 'Professional Biography',
+    workplaceInfo: 'Workplace Info',
+    weeklyPatientVolume: 'Weekly Patient Volume',
+    diagnosticReports: 'Diagnostic Reports',
+    pharmacy: 'Pharmacy',
+    scheduling: 'Scheduling',
+    secureConsult: 'Secure Consult',
+    clinicalNotes: 'Clinical Notes',
+    consultations: 'Consultations',
+    activeLink: 'Secure Active Link',
+    typeMessage: 'Type clinical response...',
+  },
+  hi: {
+    dashboard: 'डैशबोर्ड',
+    overview: 'अवलोकन',
+    patients: 'मरीज',
+    messages: 'सुरक्षित संदेश',
+    profile: 'प्रोफ़ाइल',
+    logout: 'लॉगआउट',
+    goodMorning: 'शुभ प्रभात',
+    goodAfternoon: 'शुभ दोपहर',
+    goodEvening: 'शुभ संध्या',
+    welcomeBack: 'वापसी पर स्वागत है',
+    scheduledForToday: 'आज के लिए निर्धारित',
+    casesRequireAttention: 'मामलों पर तत्काल नैदानिक ध्यान देने की आवश्यकता है',
+    allSystemsNormal: 'सभी प्रणालियाँ सामान्य मानकों के भीतर चल रही हैं',
+    simulateEmergency: 'आपातकाल का अनुकरण करें',
+    todayAppointments: 'आज की नियुक्तियां',
+    criticalCases: 'गंभीर मामले',
+    actionRequired: 'कार्रवाई आवश्यक',
+    inPipeline: 'पाइपलाइन में',
+    scheduled: 'निर्धारित',
+    priorityQueue: 'प्राथमिकता मरीज कतार',
+    automatedSorting: 'स्वचालित गंभीरता वर्गीकरण सक्रिय',
+    newAdmission: 'नया प्रवेश',
+    noPendingCases: 'कोई लंबित उच्च-प्राथमिकता मामले नहीं',
+    waitingForSignals: 'नैदानिक संकेतों की प्रतीक्षा है',
+    analyze: 'विश्लेषण करें',
+    totalActivePatients: 'कुल सक्रिय मरीज',
+    avgConsultations: 'औसत परामर्श / माह',
+    diagnosticAccuracy: 'नैदानिक सटीकता',
+    patientSatisfaction: 'मरीज संतुष्टि',
+    patientDirectory: 'मरीज निर्देशिका',
+    syncRegistry: 'नैदानिक रजिस्ट्री को सिंक्रोनाइज़ करें',
+    activeCases: 'सक्रिय चिकित्सा मामले',
+    searchPatientsList: 'नाम या नैदानिक स्थिति से खोजें...',
+    noPatientsFound: 'आपकी खोज के मानदंडों से मेल खाने वाला कोई मरीज नहीं मिला.',
+    addPatient: 'मरीज जोड़ें',
+    registryOf: 'रजिस्ट्री',
+    assignedSubjects: 'मरीजों की नैदानिक व्यवस्था द्वारा',
+    syncAdminAssignments: 'व्यवस्था कार्यभार सिंक्रोनाइज़ करें',
+    dr: 'डॉ.',
+    searchPatients: 'मरीज डेटाबेस खोजें...',
+    activePatients: 'सक्रिय मरीज',
+    criticalAlerts: 'गंभीर अलर्ट',
+    pendingReviews: 'लंबित समीक्षाएं',
+    clinicalExcellence: 'नैदानिक उत्कृष्टता',
+    recentActivity: 'हाल की नैदानिक गतिविधि',
+    emergency: 'आपातकालीन',
+    critical: 'गंभीर',
+    normal: 'सामान्य',
+    confirmed: 'पुष्टि की गई',
+    pending: 'लंबित',
+    activePractice: 'सक्रिय अभ्यास',
+    experience: 'अनुभव',
+    totalProcedures: 'कुल प्रक्रियाएं',
+    education: 'शिक्षा',
+    certifications: 'प्रमाणपत्र',
+    professionalBiography: 'पेशेवर जीवनी',
+    workplaceInfo: 'कार्यस्थल की जानकारी',
+    weeklyPatientVolume: 'साप्ताहिक मरीज संख्या',
+    diagnosticReports: 'नैदानिक रिपोर्ट',
+    pharmacy: 'फार्मेसी',
+    scheduling: 'अनुसूचन',
+    secureConsult: 'सुरक्षित परामर्श',
+    clinicalNotes: 'नैदानिक नोट्स',
+    consultations: 'परामर्श',
+    activeLink: 'सुरक्षित सक्रिय लिंक',
+    typeMessage: 'नैदानिक प्रतिक्रिया लिखें...',
+  },
+  bn: {
+    dashboard: 'ড্যাশবোর্ড',
+    overview: 'সংক্ষিপ্ত বিবরণ',
+    patients: 'রোগী',
+    messages: 'সুরক্ষিত বার্তা',
+    profile: 'প্রোফাইল',
+    logout: 'লগআউট',
+    dr: 'ডা.',
+    searchPatients: 'রোগী অনুসন্ধান করুন...',
+  },
+  te: {
+    dashboard: 'డాష్‌బోర్డ్',
+    overview: 'అవలోకనం',
+    patients: 'రోగులు',
+    messages: 'సురక్షిత సందేశాలు',
+    profile: 'ప్రొఫైల్',
+    logout: 'లాగ్అవుట్',
+    dr: 'డాక్టర్.',
+    searchPatients: 'రోగుల కోసం వెతకండి...',
+  },
+  mr: {
+    dashboard: 'डॅशबोर्ड',
+    overview: 'आढावा',
+    patients: 'रुग्ण',
+    messages: 'सुरक्षित संदेश',
+    profile: 'प्रोफाइल',
+    logout: 'लॉगआउट',
+    dr: 'डॉ.',
+    searchPatients: 'रुग्ण शोधा...',
+  },
+  ta: {
+    dashboard: 'டாஷ்போர்டு',
+    overview: 'மேலோட்டம்',
+    patients: 'நோயாளிகள்',
+    messages: 'பாதுகாப்பான செய்திகள்',
+    profile: 'சுயவிவரம்',
+    logout: 'வெளியேறு',
+    dr: 'டாக்டர்.',
+    searchPatients: 'நோயாளிகளைத் தேடுங்கள்...',
+  },
+  gu: {
+    dashboard: 'ડેશબોર્ડ',
+    overview: 'ઝાંખી',
+    patients: 'દર્દીઓ',
+    messages: 'સુરક્ષિત સંદેશાઓ',
+    profile: 'પ્રોફાઇલ',
+    logout: 'લોગઆઉટ',
+    dr: 'ડો.',
+    searchPatients: 'દર્દીઓ શોધો...',
+  },
+  kn: {
+    dashboard: 'ಡ್ಯಾಶ್‌ಬೋರ್ಡ್',
+    overview: 'ಅವಲೋಕನ',
+    patients: 'ರೋಗಿಗಳು',
+    messages: 'ಸುರಕ್ಷಿತ ಸಂದೇಶಗಳು',
+    profile: 'ಪ್ರೊಫೈಲ್',
+    logout: 'ಲಾಗ್ಔಟ್',
+    dr: 'ಡಾ.',
+    searchPatients: 'ರೋಗಿಗಳನ್ನು ಹುಡುಕಿ...',
+  },
+  ml: {
+    dashboard: 'ഡാഷ്ബോർഡ്',
+    overview: 'അവലോകനം',
+    patients: 'രോഗികൾ',
+    messages: 'സുരക്ഷിത സന്ദേശങ്ങൾ',
+    profile: 'പ്രൊഫൈൽ',
+    logout: 'ലോഗൗട്ട്',
+    dr: 'ഡോ.',
+    searchPatients: 'രോഗികളെ തിരയുക...',
+  },
+  pa: {
+    dashboard: 'ਡੈਸ਼ਬੋਰਡ',
+    overview: 'ਸੰਖੇਪ ਜਾਣਕਾਰੀ',
+    patients: 'ਮਰੀਜ਼',
+    messages: 'ਸੁਰੱਖਿਅਤ ਸੁਨੇਹੇ',
+    profile: 'ਪ੍ਰੋਫਾਈਲ',
+    logout: 'ਲੌਗਆਊਟ',
+    dr: 'ਡਾ.',
+    searchPatients: 'ਮਰੀਜ਼ਾਂ ਦੀ ਭਾਲ ਕਰੋ...',
+  }
+};
+
+const LanguageContext = createContext<LanguageContextType | undefined>(undefined);
+
+export const languagesList = languages;
+
+export const LanguageProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
+  const [language, setLanguage] = useState<Language>('en');
+
+  const t = (key: string): string => {
+    return (translations[language] as any)[key] || (translations['en'] as any)[key] || key;
+  };
+
+  return (
+    <LanguageContext.Provider value={{ language, setLanguage, t }}>
+      {children}
+    </LanguageContext.Provider>
+  );
+};
+
+export const useLanguage = () => {
+  const context = useContext(LanguageContext);
+  if (context === undefined) {
+    throw new Error('useLanguage must be used within a LanguageProvider');
+  }
+  return context;
+};

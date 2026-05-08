@@ -1,0 +1,6 @@
+{
+  "name": "DocConnect Portal",
+  "description": "A comprehensive healthcare management system for doctors and patients features real-time messaging, priority-based appointment queues, medical record management, and a secure prescription engine.",
+  "requestFramePermissions": [],
+  "majorCapabilities": []
+}

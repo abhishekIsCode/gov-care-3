@@ -1,0 +1,103 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // Default Deny
+    match /{document=**} {
+      allow read, write: if false;
+    }
+
+    // Helper Primitives
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    function isEmailVerified() {
+      return request.auth.token.email_verified == true;
+    }
+
+    function isOwner(userId) {
+      return isSignedIn() && request.auth.uid == userId;
+    }
+
+    function isValidId(id) {
+      return id is string && id.size() <= 128 && id.matches('^[a-zA-Z0-9_\\-]+$');
+    }
+
+    function getUserData(uid) {
+      return get(/databases/$(database)/documents/users/$(uid)).data;
+    }
+
+    function isDoctor() {
+      return isSignedIn() && getUserData(request.auth.uid).role == 'doctor';
+    }
+
+    // --- Users Collection ---
+    match /users/{userId} {
+      allow get: if isSignedIn();
+      allow list: if isDoctor();
+      allow create: if isOwner(userId) 
+                    && request.resource.data.role in ['patient', 'doctor']
+                    && request.resource.data.keys().hasAll(['uid', 'email', 'role', 'createdAt'])
+                    && request.resource.data.createdAt == request.time;
+      allow update: if isOwner(userId) 
+                    || (isDoctor() && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['currentSeverity', 'assignedDoctorId', 'notes']));
+      allow update: if isOwner(userId) 
+                    && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['displayName', 'photoURL', 'phone', 'emergencyContact'])
+                    && request.resource.data.uid == resource.data.uid;
+    }
+
+    // --- Appointments ---
+    match /appointments/{appointmentId} {
+      function isValidAppointment(data) {
+        return data.keys().hasAll(['patientId', 'doctorId', 'date', 'status', 'severity', 'reason'])
+               && data.patientId is string
+               && data.doctorId is string
+               && data.severity in ['Emergency', 'Critical', 'Normal']
+               && data.status in ['pending', 'confirmed', 'cancelled', 'completed'];
+      }
+
+      allow read: if isSignedIn() && (isOwner(resource.data.patientId) || isOwner(resource.data.doctorId));
+      allow create: if isSignedIn() && isValidAppointment(request.resource.data)
+                    && (isOwner(request.resource.data.patientId) || isOwner(request.resource.data.doctorId));
+      allow update: if isSignedIn() && isValidAppointment(request.resource.data)
+                    && (isOwner(resource.data.patientId) || isOwner(resource.data.doctorId))
+                    && request.resource.data.diff(resource.data).affectedKeys().hasAny(['status', 'date', 'reason']);
+    }
+
+    // --- Medical Records ---
+    match /medicalRecords/{recordId} {
+      function isValidRecord(data) {
+        return data.keys().hasAll(['patientId', 'doctorId', 'diagnosis', 'notes', 'date'])
+               && data.patientId is string
+               && data.doctorId is string;
+      }
+
+      allow read: if isSignedIn() && (isOwner(resource.data.patientId) || isOwner(resource.data.doctorId));
+      allow create: if isDoctor() && isValidRecord(request.resource.data)
+                    && isOwner(request.resource.data.doctorId);
+      allow update: if isDoctor() && isOwner(resource.data.doctorId)
+                    && isValidRecord(request.resource.data)
+                    && request.resource.data.patientId == resource.data.patientId;
+    }
+
+    // --- Lab Results ---
+    match /labResults/{resultId} {
+      allow read: if isSignedIn() && (isOwner(resource.data.patientId) || isDoctor());
+      // In this app, we allow doctors to "order" or "input" labs for simplicity
+      allow create, update: if isDoctor();
+    }
+
+    // --- Secure Messaging ---
+    match /chats/{chatId} {
+      allow read: if isSignedIn() && chatId.contains(request.auth.uid);
+      
+      match /messages/{messageId} {
+        allow read: if isSignedIn() && chatId.contains(request.auth.uid);
+        allow create: if isSignedIn() 
+                      && request.resource.data.senderId == request.auth.uid
+                      && chatId.contains(request.auth.uid)
+                      && request.resource.data.timestamp == request.time;
+      }
+    }
+  }
+}
