@@ -17,12 +17,12 @@ import {
 import { collection, query, where, onSnapshot, orderBy, limit, addDoc } from 'firebase/firestore';
 import { db } from '../../lib/firebase';
 import { useAuth } from '../AuthProvider';
-import { useLanguage } from '../LanguageProvider';
+import { useLanguage, translateName } from '../LanguageProvider';
 import { Appointment, LabResult, AppointmentSeverity } from '../../types';
 
 export default function Overview() {
   const { profile } = useAuth();
-  const { t } = useLanguage();
+  const { t, language, locale } = useLanguage();
   const [appointments, setAppointments] = useState<Appointment[]>([]);
   const [stats, setStats] = useState({ total: 0, critical: 0, pending: 0 });
 
@@ -129,11 +129,8 @@ export default function Overview() {
         <div className="relative z-10 max-w-2xl">
           <h1 className="text-5xl font-serif font-medium mb-4 leading-tight">
             {t('welcomeBack')}, <br />
-            <span className="italic text-brand-accent">{t('dr')} {profile?.displayName}</span>
+            <span className="italic text-brand-accent">{t('dr')} {translateName(profile?.displayName, t)}</span>
           </h1>
-          <p className="text-brand-accent/80 text-lg font-medium leading-relaxed">
-            {t('scheduledForToday').replace('today', stats.total.toString())} {stats.critical > 0 ? `${stats.critical} ${t('casesRequireAttention')}` : t('allSystemsNormal')}
-          </p>
         </div>
         
         {/* Abstract Background Shapes */}
@@ -185,9 +182,6 @@ export default function Overview() {
               <h3 className="text-lg font-serif font-bold text-brand-primary">{t('priorityQueue')}</h3>
               <p className="text-[10px] uppercase font-bold text-brand-secondary tracking-widest">{t('automatedSorting')}</p>
             </div>
-            <button className="px-6 py-2 bg-brand-primary text-white rounded-full text-xs font-bold flex items-center gap-2 hover:bg-brand-secondary transition-colors">
-              <Plus className="w-4 h-4" /> {t('newAdmission')}
-            </button>
           </div>
 
           <div className="divide-y divide-brand-accent/5">
@@ -200,20 +194,20 @@ export default function Overview() {
               appointments.map((appt, i) => (
                 <div key={appt.id} className="px-8 py-6 hover:bg-brand-surface transition-colors flex items-center gap-6 group">
                   <div className="w-12 h-12 rounded-2xl bg-brand-accent/10 flex items-center justify-center font-bold text-brand-secondary text-lg uppercase transition-all group-hover:bg-white group-hover:shadow-md">
-                    {appt.patientName ? appt.patientName[0] : 'U'}
+                    {appt.patientName ? translateName(appt.patientName, t)[0] : 'U'}
                   </div>
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-2 mb-1">
-                      <h4 className="font-bold text-brand-primary group-hover:text-brand-secondary transition-colors">{appt.patientName || 'Unknown Patient'}</h4>
+                      <h4 className="font-bold text-brand-primary group-hover:text-brand-secondary transition-colors">{translateName(appt.patientName, t) || 'Unknown Patient'}</h4>
                       <span className={`px-2 py-0.5 rounded text-[8px] font-black uppercase border ${severityColors[appt.severity]}`}>
-                        {appt.severity}
+                        {t(appt.severity.toLowerCase())}
                       </span>
                     </div>
                     <p className="text-xs text-zinc-400 italic leading-relaxed">{appt.reason}</p>
                   </div>
                   <div className="text-right">
                     <p className="font-bold text-brand-primary">
-                        {new Date(appt.date).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                        {new Date(appt.date).toLocaleTimeString(locale, { hour: '2-digit', minute: '2-digit' })}
                     </p>
                     <p className="text-[10px] font-bold uppercase text-zinc-300">Scheduled</p>
                   </div>

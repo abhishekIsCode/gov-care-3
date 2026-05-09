@@ -18,7 +18,7 @@ import {
   User
 } from 'lucide-react';
 import { useAuth } from './AuthProvider';
-import { languagesList, useLanguage } from './LanguageProvider';
+import { languagesList, useLanguage, translateName } from './LanguageProvider';
 import { collection, query, where, onSnapshot, orderBy, limit } from 'firebase/firestore';
 import { db } from '../lib/firebase';
 import { Appointment, LabResult, Message } from '../types';
@@ -31,7 +31,7 @@ import DoctorProfile from './Dashboard/DoctorProfile';
 
 export default function Dashboard() {
   const { profile, signOut } = useAuth();
-  const { language, setLanguage, t } = useLanguage();
+  const { language, locale, setLanguage, t } = useLanguage();
   const [activeTab, setActiveTab] = useState<'overview' | 'patients' | 'messages' | 'profile'>('patients');
   const [greeting, setGreeting] = useState('');
 
@@ -91,11 +91,11 @@ export default function Dashboard() {
                 {profile?.photoURL ? (
                   <img src={profile.photoURL} alt="" className="w-full h-full object-cover" />
                 ) : (
-                  profile?.displayName?.[0] || 'D'
+                  translateName(profile?.displayName, t)?.[0] || 'D'
                 )}
               </div>
               <div className="flex-1 min-w-0">
-                <p className="text-sm font-bold truncate group-hover:text-brand-secondary transition-colors">{t('dr')} {profile?.displayName}</p>
+                <p className="text-sm font-bold truncate group-hover:text-brand-secondary transition-colors">{t('dr')} {translateName(profile?.displayName, t)}</p>
                 <p className="text-[10px] uppercase font-bold text-brand-secondary tracking-widest truncate">{profile?.role}</p>
               </div>
             </div>
@@ -121,23 +121,11 @@ export default function Dashboard() {
             onClick={() => setActiveTab('profile')}
           >
             <h2 className="text-2xl font-serif font-bold text-brand-primary">
-              {greeting}, <span className="text-brand-secondary italic group-hover:text-brand-accent transition-colors">{t('dr')} {profile?.displayName}</span>
+              {greeting}, <span className="text-brand-secondary italic group-hover:text-brand-accent transition-colors">{t('dr')} {translateName(profile?.displayName, t)}</span>
             </h2>
             <div className="h-6 w-px bg-brand-accent/20" />
             <span className="text-[10px] font-bold uppercase tracking-widest text-zinc-400">
-              {new Date().toLocaleDateString(
-                language === 'en' ? 'en-US' : 
-                language === 'hi' ? 'hi-IN' : 
-                language === 'bn' ? 'bn-IN' : 
-                language === 'te' ? 'te-IN' : 
-                language === 'mr' ? 'mr-IN' : 
-                language === 'ta' ? 'ta-IN' : 
-                language === 'gu' ? 'gu-IN' : 
-                language === 'kn' ? 'kn-IN' : 
-                language === 'ml' ? 'ml-IN' : 
-                language === 'pa' ? 'pa-IN' : 'en-US', 
-                { weekday: 'long', month: 'long', day: 'numeric' }
-              )}
+              {new Date().toLocaleDateString(locale, { weekday: 'long', month: 'long', day: 'numeric' })}
             </span>
           </motion.div>
 

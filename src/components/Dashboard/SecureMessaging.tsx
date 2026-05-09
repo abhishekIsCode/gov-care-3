@@ -17,12 +17,12 @@ import {
 import { collection, query, where, onSnapshot, addDoc, orderBy, limit, doc, getDoc } from 'firebase/firestore';
 import { db } from '../../lib/firebase';
 import { useAuth } from '../AuthProvider';
-import { useLanguage } from '../LanguageProvider';
+import { useLanguage, translateName } from '../LanguageProvider';
 import { Message, UserProfile } from '../../types';
 
 export default function SecureMessaging({ initialChat }: { initialChat?: UserProfile }) {
   const { profile } = useAuth();
-  const { t } = useLanguage();
+  const { t, language, locale } = useLanguage();
   const [conversations, setConversations] = useState<UserProfile[]>([]);
   const [selectedChat, setSelectedChat] = useState<UserProfile | null>(initialChat || null);
   const [messages, setMessages] = useState<Message[]>([]);
@@ -155,13 +155,13 @@ export default function SecureMessaging({ initialChat }: { initialChat?: UserPro
             >
               <div className="relative">
                 <div className="w-12 h-12 rounded-2xl bg-brand-surface border border-brand-accent/5 flex items-center justify-center font-bold text-brand-secondary uppercase transition-all group-hover:bg-white group-hover:shadow-md">
-                  {conv.displayName[0]}
+                  {translateName(conv.displayName, t)[0]}
                 </div>
                 <div className="absolute -bottom-1 -right-1 w-4 h-4 rounded-full bg-emerald-500 border-2 border-white" />
               </div>
               <div className="flex-1 min-w-0">
                 <div className="flex justify-between items-baseline mb-1">
-                  <h4 className="font-bold text-sm text-brand-primary truncate">{conv.displayName}</h4>
+                  <h4 className="font-bold text-sm text-brand-primary truncate">{translateName(conv.displayName, t)}</h4>
                   <span className="text-[10px] text-brand-secondary font-bold uppercase tracking-tight">12m</span>
                 </div>
                 <p className="text-[10px] uppercase font-bold text-zinc-300 truncate tracking-widest">Medical Record Sync...</p>
@@ -182,10 +182,10 @@ export default function SecureMessaging({ initialChat }: { initialChat?: UserPro
                   <ChevronLeft className="w-5 h-5 text-brand-primary" />
                 </button>
                 <div className="w-12 h-12 rounded-[1.25rem] bg-brand-accent/10 flex items-center justify-center text-brand-secondary font-bold text-lg uppercase">
-                  {selectedChat.displayName[0]}
+                  {translateName(selectedChat.displayName, t)[0]}
                 </div>
                 <div>
-                  <h4 className="font-bold text-brand-primary">{selectedChat.displayName}</h4>
+                  <h4 className="font-bold text-brand-primary">{translateName(selectedChat.displayName, t)}</h4>
                   <div className="flex items-center gap-1.5 font-bold text-[10px] uppercase text-emerald-500 tracking-widest">
                     <div className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
                     {t('activeLink')}
@@ -208,7 +208,7 @@ export default function SecureMessaging({ initialChat }: { initialChat?: UserPro
                  <div className="flex items-center gap-2 px-6 py-2 bg-brand-accent/20 rounded-full text-[10px] font-black text-brand-primary uppercase tracking-[0.2em] border border-brand-accent/30">
                     <Lock className="w-3.5 h-3.5" /> End-to-End Encrypted
                  </div>
-                 <p className="mt-4 text-[10px] text-zinc-400 font-bold uppercase tracking-widest">Chat started on {new Date(selectedChat.createdAt).toLocaleDateString()} • {new Date(selectedChat.createdAt).toLocaleTimeString()}</p>
+                 <p className="mt-4 text-[10px] text-zinc-400 font-bold uppercase tracking-widest">Chat started on {new Date(selectedChat.createdAt).toLocaleDateString(locale)} • {new Date(selectedChat.createdAt).toLocaleTimeString(locale)}</p>
               </div>
 
               {messages.map((msg, i) => {
@@ -229,7 +229,7 @@ export default function SecureMessaging({ initialChat }: { initialChat?: UserPro
                           {msg.content}
                        </div>
                        <div className={`mt-2 flex items-center gap-1.5 text-[10px] uppercase font-bold tracking-widest text-zinc-300 ${isMine ? 'justify-end' : 'justify-start'}`}>
-                          {new Date(msg.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                          {new Date(msg.timestamp).toLocaleTimeString(locale, { hour: '2-digit', minute: '2-digit' })}
                           {isMine && <CheckCircle2 className="w-3 h-3 text-emerald-500" />}
                        </div>
                     </div>
